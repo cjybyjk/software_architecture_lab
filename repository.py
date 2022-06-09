@@ -1,4 +1,5 @@
 import abc
+import pickle
 import model
 
 
@@ -24,3 +25,26 @@ class SqlAlchemyRepository(AbstractRepository):
 
     def list(self):
         return self.session.query(model.Batch).all()
+
+class PickleRepository(AbstractRepository):
+    '''Complete the definition of this class.'''
+    def __init__(self, path=None):
+        self._path = path
+        try:
+            with open (path, 'rb') as f:
+                self._data = pickle.load(f)
+        except IOError:
+            self._data = dict()
+        
+    def add(self, batch):
+        self._data[batch.reference] = batch
+        # save
+        if self._path:
+            with open (self._path, 'wb') as f:
+                pickle.dump(self._data, f)
+
+    def get(self, reference):
+        return self._data[reference]
+
+    def list(self):
+        return self._data.values()
